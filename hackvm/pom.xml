@@ -35,7 +35,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>cpp.hackvm.Main</mainClass>
+                            <mainClass>cpp.hackvm.Translator</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
