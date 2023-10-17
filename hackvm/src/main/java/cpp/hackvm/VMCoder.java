@@ -85,9 +85,8 @@ public class VMCoder
             case "or":
                 writer.write("M=D|M\n");
                 break;
-
             default:
-                break;
+                throw new RuntimeException(cmd);
         }
         incrementSP();
     }
@@ -96,9 +95,9 @@ public class VMCoder
     {
 
         if(cmd == VMCommands.C_PUSH)
-            writeline( "// PUSH ".concat(seg).concat(" ").concat("index") );
+            writeline( "// PUSH ".concat(seg).concat(" ").concat( String.valueOf(index) ) );
         else if( cmd == VMCommands.C_POP )
-            writeline( "// POP ".concat(seg).concat(" ").concat("index") );
+            writeline( "// POP ".concat(seg).concat(" ").concat( String.valueOf(index) ) );
 
         switch (seg)
         {
@@ -180,7 +179,9 @@ public class VMCoder
     private void loadSeg(String seg, int index) throws IOException
     {
         writeline( "@".concat(seg) );
+        writeline( "D=M");
         writeline( "@".concat( String.valueOf(index) ) );
+        writeline( "A=D+A");
     }
 
     private void comparisonLogic(String eq) throws IOException

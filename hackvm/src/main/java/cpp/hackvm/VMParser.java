@@ -111,5 +111,16 @@ public class VMParser
         return ArgsTwo;
     }
 
+    public void close()
+    {
+        try 
+        {
+            reader.close();
+        } 
+        catch (IOException e) 
+        {
+            e.printStackTrace();
+        }
+    }
 
 }
