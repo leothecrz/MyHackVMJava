@@ -129,7 +129,10 @@ public class VMCoder
 
         if(cmd == VMCommands.C_PUSH)
         {
-            writeline("D=M");
+            if(!seg.equals( "constant" ))
+                writeline("D=M");
+            else
+                writeline("D=A");
             loadSPInA();
             writeline("M=D");
             incrementSP();
@@ -141,7 +144,7 @@ public class VMCoder
             writeline("@R13");
             writeline("M=D");
             popToD();
-            writeline("@R3");
+            writeline("@R13");
             writeline("A=M");
             writeline("M=D");
             return;

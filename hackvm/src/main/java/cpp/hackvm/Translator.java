@@ -11,11 +11,17 @@ public class Translator {
     public static void main(String[] args) 
     {
         
+        args = new String[1];
+        args[0] = new String("/Users/Repo/Java/MyHackVM/hackvm/BasicTest.vm");
+
         if(args.length < 1)
             return;
 
         File input = new File(args[0]);
-        File output = new File( input.getName().concat(".asm" ));
+        File output = new File( 
+            input.getPath().substring(0, 
+            input.getPath().lastIndexOf("."))
+            .concat(".asm" ));
 
         if(output.exists())
         {
@@ -24,7 +30,7 @@ public class Translator {
 
             char charin = in.nextLine().charAt(0);
             
-            if(charin != 'y' || charin != 'Y' )
+            if( charin != 'y' && charin != 'Y' )
                 System.exit(0);
             output.delete();
             in.close();
@@ -48,12 +54,13 @@ public class Translator {
                 try { translate( input );} catch (IOException e) { e.printStackTrace(); }
             }
         }
+        try { coderModule.closeFile(); } catch (IOException e) { e.printStackTrace(); }
     
     }
 
     private static void translate(File file) throws IOException
     {
-        VMParser fileParser = new VMParser(file.getName());
+        VMParser fileParser = new VMParser(file.getPath());
 
         while(!fileParser.isAtEndOfFile())
         {
