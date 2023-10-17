@@ -106,7 +106,7 @@ public class VMParser
         return ArgsOne;
     }
 
-    public int getArgs2()
+    public Integer getArgs2()
     {
         return ArgsTwo;
     }

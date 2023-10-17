@@ -58,6 +58,8 @@ public class Translator {
         while(!fileParser.isAtEndOfFile())
         {
             
+            System.out.println( fileParser.getCommandType() + " "+ fileParser.getArgs1() + " " +  ( fileParser.getArgs2() == null ? "":fileParser.getArgs2())  );
+
             switch ( fileParser.getCommandType() ) 
             {
                 case C_ARITHMETIC :
