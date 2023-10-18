@@ -11,9 +11,6 @@ public class Translator {
     public static void main(String[] args) 
     {
         
-        args = new String[1];
-        args[0] = new String("/Users/Repo/Java/MyHackVM/hackvm/BasicTest.vm");
-
         if(args.length < 1)
             return;
 

@@ -43,8 +43,10 @@ public class VMCoder
         {
             case "eq":
                 comparisonLogic("JEQ");
+                break;
             case "gt":
                 comparisonLogic("JGT");
+                break;
             case "lt":
                 comparisonLogic("JLT");
                 break;
@@ -53,11 +55,13 @@ public class VMCoder
                 loadSPInA();
                 writeline("M=!M");
                 incrementSP();
+                break;
             case "neg":
                 decrementSP();
                 loadSPInA();
                 writeline("M=-M");
                 incrementSP();
+                break;
             default:
                 writeArithmeticOperation(cmd);
                 break;
@@ -104,15 +108,19 @@ public class VMCoder
             case "pointer":
                 writeline( "@R".concat(String.valueOf(index + 3)) );
                 break;
+
             case "temp":
-                writeline( "@R".concat(String.valueOf(index + 5)) );
+                writeline( "@R5".concat(String.valueOf(index + 5)) );
                 break;
+
             case "static":
-                writeline( "@".concat(file.getName()).concat( String.valueOf(index)) );
+                writeline( "@".concat( file.getName() ).concat( String.valueOf(index) ) );
                 break;
+
             case "constant":
                 writeline( "@".concat(  String.valueOf(index) ) );
                 break;
+
             case "local":
                 loadSeg("LCL", index);
                 break;
@@ -133,13 +141,16 @@ public class VMCoder
                 writeline("D=M");
             else
                 writeline("D=A");
+
             loadSPInA();
             writeline("M=D");
             incrementSP();
+            writeline("");
             return;
         }
         else if( cmd == VMCommands.C_POP )
         {
+
             writeline("D=A");
             writeline("@R13");
             writeline("M=D");
@@ -147,6 +158,7 @@ public class VMCoder
             writeline("@R13");
             writeline("A=M");
             writeline("M=D");
+            writeline("");
             return;
         }
         
@@ -202,11 +214,11 @@ public class VMCoder
         writeline( "@LABELEND".concat( String.valueOf(labelCount) ) );
         writeline("0;JMP\n");
 
-        writeline( "(LABEL".concat( String.valueOf(labelCount) ));
+        writeline( "(LABEL".concat( String.valueOf(labelCount) ).concat(")")  );
         loadSPInA();
         writeline("M=-1 // False\n"); // False
 
-        writeline( "(LABELEND".concat( String.valueOf(labelCount) ));
+        writeline( "(LABELEND".concat( String.valueOf(labelCount) ).concat(")") );
         labelCount++;
 
     }

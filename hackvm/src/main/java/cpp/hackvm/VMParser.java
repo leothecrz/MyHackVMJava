@@ -73,19 +73,19 @@ public class VMParser
         currentLine = trimComments( currentLine.trim() ).trim();
         String[] lineArray = currentLine.split(" "); // returns one string at minimum
 
-        VMCommands cmd = map.get( lineArray[0] );
+        VMCommands cmd = map.get( lineArray[0].trim() );
         if(cmd == null)
             return;
         command = cmd;
 
         if(command == VMCommands.C_ARITHMETIC)
-            ArgsOne = lineArray[0];
+            ArgsOne = lineArray[0].trim();
 
         if(lineArray.length > 1 && command != VMCommands.C_ARITHMETIC)
-            ArgsOne = lineArray[1];
+            ArgsOne = lineArray[1].trim();
         
         if(lineArray.length > 2)
-            ArgsTwo = Integer.parseInt( lineArray[2] );
+            ArgsTwo = Integer.parseInt( lineArray[2].trim() );
         
     }
 
