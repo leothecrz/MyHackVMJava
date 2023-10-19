@@ -154,10 +154,13 @@ public class VMCoder
             writeline("D=A");
             writeline("@R13");
             writeline("M=D");
+            //ADRS -> M[R13]
+
             popToD();
             writeline("@R13");
             writeline("A=M");
             writeline("M=D");
+            //Store D -> ADRS M[R13]
             writeline("");
             return;
         }
@@ -191,6 +194,12 @@ public class VMCoder
         writeline("D=M");
     }
 
+    /**
+     * Register A 
+     * @param seg
+     * @param index
+     * @throws IOException
+     */
     private void loadSeg(String seg, int index) throws IOException
     {
         writeline( "@".concat(seg) );
@@ -226,6 +235,162 @@ public class VMCoder
     private void writeline(String str) throws IOException
     {
         writer.write(str.concat("\n"));
+    }
+
+    public void writeGoto(String label) throws IOException
+    {
+        writeline("// Goto ".concat(label) );
+        writeline( "@".concat(label) );
+        writeline("0;JMP");
+        //Jump To Label Unconditionally
+        writeline("");
+    }
+
+    public void writeLabel(String label) throws IOException
+    {
+        writeline("// Label ".concat(label) );
+        writeline( "(".concat(label).concat(")") );
+        writeline("");
+    }
+
+    public void writeFunction(String name, int counts) throws IOException
+    {
+        writeline("// Function ".concat(name).concat( " Args#:".concat( String.valueOf(counts) ) ) );
+        writeLabel(name);
+        for (int i = 0; i < counts; i++) 
+            writePushPop(VMCommands.C_PUSH, "constant", 0);    
+    }
+
+    public void writeIf(String label) throws IOException
+    {
+        writeline("// If-Goto: ".concat(label) );
+        popToD();
+        //Pop Stack To D
+        writeline( "@".concat(label) );
+        writeline( "D;JNE" );
+        //If Stack top NOT == 0 jump to label
+        writeline("");
+    }
+
+    private void writeDirectPush(String seg) throws IOException
+    {
+        writeline( "@".concat(seg) );
+        writeline( "D=M" );
+
+        writeline( "@SP");
+        writeline( "A=M");
+        writeline( "M=D");
+        incrementSP();
+        //Push Segment ADRS to stack
+    }
+
+    public void writeCall(String name, int argsCount) throws IOException
+    {
+        writeline("// Call function:".concat(name).concat(" Args#:").concat( String.valueOf(argsCount) ) );
+        String lbl = "RETURN".concat( String.valueOf(labelCount++) );
+        writeline( "@".concat(lbl) );
+        writeline( "D=A");
+        writeline( "@SP");
+        writeline( "A=M");
+        writeline( "M=D");
+        incrementSP();
+        writeDirectPush( "LCL");
+        writeDirectPush( "ARG");
+        writeDirectPush( "THIS");
+        writeDirectPush( "THAT");
+        //Store ReturnADRS, LCL,ARG,THIS,and THAT ADRS On STACK
+
+        writeline("@SP");
+        writeline("D=M");
+        writeline("@5");
+        writeline("D=D-A");
+        writeline("@".concat( String.valueOf(argsCount) ));
+        writeline("D=D-A");
+        writeline("@ARG");
+        writeline("M=D");
+        //Store argument Stack pos in ARG
+
+        writeline("@SP");
+        writeline("D=M");
+        writeline("@LCL");
+        writeline("M=D");
+        //Store SP pos in LCL
+
+        writeline("@".concat(name));
+        writeline("0;JMP");
+        //GOTO Fucntion
+        writeLabel(lbl);
+        //RETURN POINT
+        writeline("");
+
+    }
+
+    private void storeFrame(String seg) throws IOException
+    {
+        writeline("@R11");
+        writeline("D=M-1");
+        //Decrement R11 by 1 and store in D
+        writeline("M=D");
+        writeline("A=D");
+        //Save and goto D
+        writeline("D=M");
+        // Store in D
+        writeline("@".concat(seg));
+        writeline("M=D");
+        //Store D in seg
+    }
+
+    public void writeReturn() throws IOException
+    {
+        writeline("// Return");
+        writeline("@LCL");
+        writeline("D=M");
+        //Store Original SP in D
+
+        writeline("@R11");
+        writeline("M=D");
+        //Store D's content in R11
+
+        writeline("@5");
+        writeline("A=D-A");
+        writeline("D=M");
+        // M[LCL] - 5 -> D
+
+        writeline("@R12");
+        writeline("M=D");
+        // Store RETURN ADRS in R12
+    
+        writePushPop(VMCommands.C_POP, "ARG", 0);
+        writeline("@ARG");
+        writeline("D=M");
+        //Store Stack POP in D
+
+        writeline("@SP");
+        writeline("M=D+1");
+        //Move Stack Pointer to D+1
+
+        storeFrame("THAT");
+        storeFrame("THIS");
+        storeFrame("ARG");
+        storeFrame("LCL");
+
+        writeline("@R12");
+        writeline("A=M");
+        writeline("0;JMP");
+        writeline("");
+        //GOTO ADRS SAVED IN R12
+    }
+
+    public void writeInit() throws IOException
+    {
+        writeline("// System Init");
+        writeline("@256");
+        writeline("D=A");
+        //Store 256 in D
+        writeline("@SP");
+        writeline("M=D");
+        //SP = 256
+        writeCall("Sys.init", 0);
     }
 
 }
