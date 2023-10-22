@@ -3,30 +3,19 @@ package cpp.hackvm;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-
 public class VMCoder 
 {
-    private Map<String, String> addresses;
 
     private File file;
     private FileWriter writer;
 
     private int labelCount;
+    private String functionName;
 
     public VMCoder(String fileName)
     {
         labelCount = 0;
-        addresses = new HashMap<>();
-        addresses.put("local", "LCL");
-        addresses.put("argument", "ARG");
-        addresses.put("this", "THIS");
-        addresses.put("that", "THAT");
-        addresses.put("pointer", "3");
-        addresses.put("temp", "5");
-        addresses.put("static", "16");
-
+        functionName = "OS";
         file = new File(fileName);
         try { writer = new FileWriter(file); } catch (IOException e) { e.printStackTrace(); }
     }
@@ -34,6 +23,11 @@ public class VMCoder
     public void closeFile() throws IOException
     {
         writer.close();
+    }
+
+    private void writeline(String str) throws IOException
+    {
+        writer.write(str.concat("\n"));
     }
 
     public void writeArithmetic(String cmd) throws IOException
@@ -71,7 +65,6 @@ public class VMCoder
 
     private void writeArithmeticOperation(String cmd) throws IOException
     {
-
         popToD();
         decrementSP();
         loadSPInA();
@@ -110,11 +103,11 @@ public class VMCoder
                 break;
 
             case "temp":
-                writeline( "@R5".concat(String.valueOf(index + 5)) );
+                writeline( "@R".concat(String.valueOf(index + 5)) );
                 break;
 
             case "static":
-                writeline( "@".concat( file.getName() ).concat( String.valueOf(index) ) );
+                writeline( "@".concat( file.getName() ).concat(".").concat( String.valueOf(index) ) );
                 break;
 
             case "constant":
@@ -133,8 +126,10 @@ public class VMCoder
             case "that":
                 loadSeg("THAT", index);
                 break;
+            default:
+                throw new RuntimeException("Unknown Segment");
         }
-
+        //Asume A REG has ADRS for PUSH or POP
         if(cmd == VMCommands.C_PUSH)
         {
             if(!seg.equals( "constant" ))
@@ -194,12 +189,6 @@ public class VMCoder
         writeline("D=M");
     }
 
-    /**
-     * Register A 
-     * @param seg
-     * @param index
-     * @throws IOException
-     */
     private void loadSeg(String seg, int index) throws IOException
     {
         writeline( "@".concat(seg) );
@@ -214,49 +203,41 @@ public class VMCoder
         decrementSP();
         loadSPInA();
         writeline( "D=M-D\n" );
-
-        writeline( "@LABEL".concat( String.valueOf(labelCount) ) );
+        writeline( "@TrueLABEL".concat( String.valueOf(labelCount) ) );
         writeline( "D;".concat(eq) );
         
         loadSPInA();
-        writeline("M=0 // True\n"); // True
-        writeline( "@LABELEND".concat( String.valueOf(labelCount) ) );
+        writeline("M=0 // False\n");
+        writeline( "@FalseLABEL".concat( String.valueOf(labelCount) ) );
         writeline("0;JMP\n");
 
-        writeline( "(LABEL".concat( String.valueOf(labelCount) ).concat(")")  );
+        writeline( "(TrueLABEL".concat( String.valueOf(labelCount) ).concat(")")  );
         loadSPInA();
-        writeline("M=-1 // False\n"); // False
-
-        writeline( "(LABELEND".concat( String.valueOf(labelCount) ).concat(")") );
+        writeline("M=-1 // True\n");
+        writeline( "(FalseLABEL".concat( String.valueOf(labelCount) ).concat(")") );
+        incrementSP();
         labelCount++;
-
-    }
-
-    private void writeline(String str) throws IOException
-    {
-        writer.write(str.concat("\n"));
     }
 
     public void writeGoto(String label) throws IOException
     {
         writeline("// Goto ".concat(label) );
-        writeline( "@".concat(label) );
+        writeline( "@".concat(functionName).concat("$").concat(label) );
         writeline("0;JMP");
-        //Jump To Label Unconditionally
         writeline("");
+        //Jump To Label Unconditionally
     }
 
     public void writeLabel(String label) throws IOException
     {
-        writeline("// Label ".concat(label) );
-        writeline( "(".concat(label).concat(")") );
-        writeline("");
+        writeline( "(".concat(functionName).concat("$").concat(label).concat(")") );
     }
 
     public void writeFunction(String name, int counts) throws IOException
     {
-        writeline("// Function ".concat(name).concat( " Args#:".concat( String.valueOf(counts) ) ) );
-        writeLabel(name);
+        writeline("// Function ".concat(name).concat( " Args#: ").concat( String.valueOf(counts) ) );
+        functionName = name;
+        writeline("(".concat(functionName).concat(")"));
         for (int i = 0; i < counts; i++) 
             writePushPop(VMCommands.C_PUSH, "constant", 0);    
     }
@@ -265,11 +246,10 @@ public class VMCoder
     {
         writeline("// If-Goto: ".concat(label) );
         popToD();
-        //Pop Stack To D
-        writeline( "@".concat(label) );
+        writeline( "@".concat(functionName).concat("$").concat(label) );
         writeline( "D;JNE" );
-        //If Stack top NOT == 0 jump to label
         writeline("");
+        //If Stack top NOT == 0 jump to label
     }
 
     private void writeDirectPush(String seg) throws IOException
@@ -287,7 +267,9 @@ public class VMCoder
     public void writeCall(String name, int argsCount) throws IOException
     {
         writeline("// Call function:".concat(name).concat(" Args#:").concat( String.valueOf(argsCount) ) );
-        String lbl = "RETURN".concat( String.valueOf(labelCount++) );
+        functionName = name;
+        String lbl = functionName.concat("$RETURN_").concat( String.valueOf(labelCount) );
+        labelCount++;
         writeline( "@".concat(lbl) );
         writeline( "D=A");
         writeline( "@SP");
@@ -318,67 +300,55 @@ public class VMCoder
 
         writeline("@".concat(name));
         writeline("0;JMP");
-        //GOTO Fucntion
-        writeLabel(lbl);
+        //GOTO Function
+        writeline("(".concat(lbl).concat(")"));
         //RETURN POINT
         writeline("");
 
     }
 
-    private void storeFrame(String seg) throws IOException
+    private void restoreFrame(String seg) throws IOException
     {
-        writeline("@R11");
-        writeline("D=M-1");
-        //Decrement R11 by 1 and store in D
-        writeline("M=D");
-        writeline("A=D");
-        //Save and goto D
+        writeline("@R15");
+        writeline("AM=M-1");
         writeline("D=M");
-        // Store in D
         writeline("@".concat(seg));
         writeline("M=D");
-        //Store D in seg
     }
-
+    
     public void writeReturn() throws IOException
     {
         writeline("// Return");
         writeline("@LCL");
         writeline("D=M");
-        //Store Original SP in D
-
-        writeline("@R11");
+        writeline("@R15");
         writeline("M=D");
-        //Store D's content in R11
+        //Store SP in R15
 
         writeline("@5");
         writeline("A=D-A");
         writeline("D=M");
-        // M[LCL] - 5 -> D
-
-        writeline("@R12");
+        writeline("@R14");
         writeline("M=D");
-        // Store RETURN ADRS in R12
+        //Store RETURN ADRS in R14
     
-        writePushPop(VMCommands.C_POP, "ARG", 0);
+        writePushPop(VMCommands.C_POP, "argument", 0); // USES r13
         writeline("@ARG");
         writeline("D=M");
-        //Store Stack POP in D
-
         writeline("@SP");
         writeline("M=D+1");
-        //Move Stack Pointer to D+1
+        //Restore Stack Pointer
 
-        storeFrame("THAT");
-        storeFrame("THIS");
-        storeFrame("ARG");
-        storeFrame("LCL");
+        restoreFrame("THAT");
+        restoreFrame("THIS");
+        restoreFrame("ARG");
+        restoreFrame("LCL");
 
-        writeline("@R12");
+        writeline("@R14");
         writeline("A=M");
         writeline("0;JMP");
         writeline("");
-        //GOTO ADRS SAVED IN R12
+        //GOTO ADRS SAVED IN R14
     }
 
     public void writeInit() throws IOException
@@ -386,7 +356,6 @@ public class VMCoder
         writeline("// System Init");
         writeline("@256");
         writeline("D=A");
-        //Store 256 in D
         writeline("@SP");
         writeline("M=D");
         //SP = 256
