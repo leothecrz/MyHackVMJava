@@ -18,8 +18,7 @@ public class Translator {
         //File output takes either Directory Name or Single File Name
         File output = new File( input.isDirectory() ?
             input.getPath().concat("/").concat( input.getName() ).concat(".asm") :
-            input.getPath().substring(0, input.getPath().lastIndexOf(".")).concat(".asm" ) 
-            );
+            input.getPath().substring(0, input.getPath().lastIndexOf(".")).concat(".asm" ) );
         if(output.exists())
         {
             System.out.println("Output file already exist. Replace it? n/y");
@@ -61,9 +60,7 @@ public class Translator {
 
         while(!fileParser.isAtEndOfFile())
         {
-            
             System.out.println( fileParser.getCommandType() + " "+ fileParser.getArgs1() + " " +  ( fileParser.getArgs2() == null ? "":fileParser.getArgs2())  );
-
             switch ( fileParser.getCommandType() ) 
             {
                 case C_ARITHMETIC :
@@ -97,9 +94,7 @@ public class Translator {
                     break;
             }
         }
-
         fileParser.close();
-
     }
 
 }

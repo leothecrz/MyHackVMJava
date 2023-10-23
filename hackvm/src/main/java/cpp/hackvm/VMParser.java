@@ -71,7 +71,7 @@ public class VMParser
     {
         resetFields();
         currentLine = trimComments( currentLine.trim() ).trim();
-        String[] lineArray = currentLine.split(" "); // returns one string at minimum
+        String[] lineArray = currentLine.split(" +"); // returns one string at minimum
 
         VMCommands cmd = map.get( lineArray[0].trim() );
         if(cmd == null)

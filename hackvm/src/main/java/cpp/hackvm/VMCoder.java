@@ -5,10 +5,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 public class VMCoder 
 {
-
     private File file;
     private FileWriter writer;
-
     private int labelCount;
     private String functionName;
 
@@ -22,6 +20,7 @@ public class VMCoder
 
     public void closeFile() throws IOException
     {
+        System.out.println("File Closed");
         writer.close();
     }
 
@@ -32,7 +31,7 @@ public class VMCoder
 
     public void writeArithmetic(String cmd) throws IOException
     {
-        writeline( "// ".concat(cmd) );
+        writeline( "//".concat(cmd) );
         switch (cmd) 
         {
             case "eq":
@@ -65,24 +64,25 @@ public class VMCoder
 
     private void writeArithmeticOperation(String cmd) throws IOException
     {
-        popToD();
+        popToD(); // TopStack To D
         decrementSP();
-        loadSPInA();
+        loadSPInA(); // Second TopStack To M
         switch (cmd) 
         {
             case "add":
-                writer.write("M=D+M\n");
+                writeline("M=D+M");
                 break;
             case "sub":
-                writer.write("M=M-D\n");
+                writeline("M=M-D");
                 break;
             case "and":
-                writer.write("M=D&M\n");
+                writeline("M=D&M");
                 break;
             case "or":
-                writer.write("M=D|M\n");
+                writeline("M=D|M");
                 break;
             default:
+                System.err.println("UKNOWN COMMAND");
                 throw new RuntimeException(cmd);
         }
         incrementSP();
@@ -95,6 +95,8 @@ public class VMCoder
             writeline( "// PUSH ".concat(seg).concat(" ").concat( String.valueOf(index) ) );
         else if( cmd == VMCommands.C_POP )
             writeline( "// POP ".concat(seg).concat(" ").concat( String.valueOf(index) ) );
+        else
+            throw new RuntimeException("PUSH POP called with invalid op");
 
         switch (seg)
         {
@@ -132,10 +134,10 @@ public class VMCoder
         //Asume A REG has ADRS for PUSH or POP
         if(cmd == VMCommands.C_PUSH)
         {
-            if(!seg.equals( "constant" ))
-                writeline("D=M");
-            else
+            if(seg.equals( "constant" )) 
                 writeline("D=A");
+            else
+                writeline("D=M");
 
             loadSPInA();
             writeline("M=D");
