@@ -281,11 +281,12 @@ public class VMCoder
         writeline( "M=D");
         incrementSP();
         //Push to stack
+
         writeDirectPush( "LCL");
         writeDirectPush( "ARG");
         writeDirectPush( "THIS");
         writeDirectPush( "THAT");
-        //Store ReturnADRS, LCL,ARG,THIS,and THAT ADRS On STACK
+        //Store ReturnADRS, LCL,ARG,THIS,and THAT ADRS on STACK
 
         writeline("@SP");
         writeline("D=M");
@@ -306,6 +307,7 @@ public class VMCoder
         writeline("@".concat(name));
         writeline("0;JMP");
         //GOTO Function
+        
         writeline("(".concat(lbl).concat(")"));
         //RETURN POINT
         writeline("");

@@ -7,31 +7,37 @@ import java.util.Scanner;
 public class Translator {
     
     private static VMCoder coderModule;
+    private static Scanner in;
 
     public static void main(String[] args) 
     {
-        
+        // End if no args given
         if(args.length < 1)
             return;
 
-        File input = new File(args[0]);
-        //File output takes either Directory Name or Single File Name
-        File output = new File( input.isDirectory() ?
-            input.getPath().concat("/").concat( input.getName() ).concat(".asm") :
-            input.getPath().substring(0, input.getPath().lastIndexOf(".")).concat(".asm" ) );
+        boolean verbose = false;
         
+        // First arg is file path
+        File input = new File(args[0]);
+
+        if( args.length > 1 && args[1].contains("-v"))
+            verbose = true;
+
+        // File output takes either Directory Name or Single File Name
+        File output = new File( input.isDirectory() ?
+            input.getPath().concat("/").concat( input.getName() ).concat(".asm") 
+            :
+            input.getPath().substring(0, input.getPath().lastIndexOf(".")).concat(".asm" ) );
         
         // If output exist ask user if they want to replace it else END. 
         if(output.exists())
         {
-            System.out.println("Output file already exist. Replace it? n/y");
-            Scanner in = new Scanner(System.in);
-            char charin = in.nextLine().charAt(0);
-            
+            in = new Scanner(System.in);
+            System.out.println("Output file already exist. Replace it? (n/y)");
+            char charin = in.nextLine().trim().charAt(0);
             if( charin != 'y' && charin != 'Y' )
                 System.exit(0);
             output.delete();
-            in.close();
         }
 
         //Create files and coder module. Write INIT.
@@ -44,28 +50,40 @@ public class Translator {
         catch (IOException e) { e.printStackTrace(); }
        
         if(input.isDirectory())
-        {
+        { // If input file path is directory iterated on every vm file.
             File[] files = input.listFiles();
             for(File f : files)
                 if(f.getName().contains(".vm"))
-                    try { translate(f); } catch (IOException e) { e.printStackTrace(); }
+                    try { translate( f, verbose ); } catch (IOException e) { e.printStackTrace(); }
         }
-        else
+        else // On single file confirm file ends with vm. 
             if(input.getName().contains(".vm"))
-                try { translate( input );} catch (IOException e) { e.printStackTrace(); }
-
+                try { translate( input, verbose );} catch (IOException e) { e.printStackTrace(); }
+        
+        // Close Coder Module and Scanner
         try { coderModule.closeFile(); } catch (IOException e) { e.printStackTrace(); }
+        in.close();
     }
 
-    private static void translate(File file) throws IOException
+    private static void translate(File file, boolean printLine) throws IOException
     {
-        VMParser fileParser = new VMParser(file.getPath());
+        VMParser fileParser = new VMParser( file.getPath() );
+        System.out.println("Opened File: " + file.getName() );
 
         while(!fileParser.isAtEndOfFile())
         {
-            System.out.println( fileParser.getCommandType() + " "+ fileParser.getArgs1() + " " +  ( fileParser.getArgs2() == null ? "":fileParser.getArgs2())  );
+            if(printLine)
+            System.out.println( 
+                "LN: " + 
+                fileParser.getLineNum() + " CMD:" + 
+                fileParser.getCommandType() + " ARG1:" +
+                fileParser.getArgs1() + " ARG2:" +
+                fileParser.getArgs2() == null ? "" : fileParser.getArgs2() 
+            );
+
             switch ( fileParser.getCommandType() ) 
             {
+                //Part 7 (Stack Arithmetic and Memory Access)
                 case C_ARITHMETIC :
                     coderModule.writeArithmetic( fileParser.getArgs1() );
                     break;
@@ -73,8 +91,10 @@ public class Translator {
                     coderModule.writePushPop( VMCommands.C_PUSH, fileParser.getArgs1(), fileParser.getArgs2());
                     break;
                 case C_POP:
-                    coderModule.writePushPop( VMCommands.C_POP, fileParser.getArgs1(), fileParser.getArgs2());
+                    coderModule.writePushPop(  VMCommands.C_POP, fileParser.getArgs1(), fileParser.getArgs2());
                     break;
+
+                //Part 8 (Program Flow and Function-functions )
                 case C_GOTO:
                     coderModule.writeGoto( fileParser.getArgs1() );
                     break;
@@ -93,6 +113,10 @@ public class Translator {
                 case C_RETURN:
                     coderModule.writeReturn();
                     break;
+                case UNSET:
+                    break;
+
+                //Error STATE
                 default:
                     System.err.println("UNKNOW COMMAND WARNING");
                     break;
