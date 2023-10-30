@@ -268,16 +268,19 @@ public class VMCoder
 
     public void writeCall(String name, int argsCount) throws IOException
     {
-        writeline("// Call function:".concat(name).concat(" Args#:").concat( String.valueOf(argsCount) ) );
-        functionName = name;
+        writeline("// Call FUNCTION:".concat(name).concat(" Args#:").concat( String.valueOf(argsCount) ) );
+
         String lbl = functionName.concat("$RETURN_").concat( String.valueOf(labelCount) );
+        functionName = name;
         labelCount++;
+
         writeline( "@".concat(lbl) );
         writeline( "D=A");
         writeline( "@SP");
         writeline( "A=M");
         writeline( "M=D");
         incrementSP();
+        //Push to stack
         writeDirectPush( "LCL");
         writeDirectPush( "ARG");
         writeDirectPush( "THIS");
@@ -286,7 +289,7 @@ public class VMCoder
 
         writeline("@SP");
         writeline("D=M");
-        writeline("@5");
+        writeline("@5"); // OFFSET
         writeline("D=D-A");
         writeline("@".concat( String.valueOf(argsCount) ));
         writeline("D=D-A");

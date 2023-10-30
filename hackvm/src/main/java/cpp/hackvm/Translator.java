@@ -19,11 +19,13 @@ public class Translator {
         File output = new File( input.isDirectory() ?
             input.getPath().concat("/").concat( input.getName() ).concat(".asm") :
             input.getPath().substring(0, input.getPath().lastIndexOf(".")).concat(".asm" ) );
+        
+        
+        // If output exist ask user if they want to replace it else END. 
         if(output.exists())
         {
             System.out.println("Output file already exist. Replace it? n/y");
             Scanner in = new Scanner(System.in);
-
             char charin = in.nextLine().charAt(0);
             
             if( charin != 'y' && charin != 'Y' )
@@ -32,6 +34,7 @@ public class Translator {
             in.close();
         }
 
+        //Create files and coder module. Write INIT.
         try 
         { 
             output.createNewFile();
@@ -91,6 +94,7 @@ public class Translator {
                     coderModule.writeReturn();
                     break;
                 default:
+                    System.err.println("UNKNOW COMMAND WARNING");
                     break;
             }
         }

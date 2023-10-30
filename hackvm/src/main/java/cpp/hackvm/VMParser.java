@@ -22,7 +22,6 @@ public class VMParser
     {
         map = new HashMap<>();
         resetFields();
-
         map.put("add", VMCommands.C_ARITHMETIC);
         map.put("sub", VMCommands.C_ARITHMETIC);
         map.put("neg", VMCommands.C_ARITHMETIC);
@@ -40,10 +39,8 @@ public class VMParser
         map.put("function", VMCommands.C_FUNCTION);
         map.put("return", VMCommands.C_RETURN);
         map.put("call", VMCommands.C_CALL);
-
         try { reader = new BufferedReader( new FileReader(new File(filepath))); } catch(FileNotFoundException e) { e.printStackTrace(); }
         currentLine = "";
-
     }
 
     public boolean isAtEndOfFile()
