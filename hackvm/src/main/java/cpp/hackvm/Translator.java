@@ -69,6 +69,7 @@ public class Translator {
     {
         VMParser fileParser = new VMParser( file.getPath() );
         System.out.println("Opened File: " + file.getName() );
+        coderModule.setFileName( file.getName() );
 
         while(!fileParser.isAtEndOfFile())
         {

@@ -7,13 +7,16 @@ public class VMCoder
 {
     private File file;
     private FileWriter writer;
+    
     private int labelCount;
     private String functionName;
+    private String activeFile;
 
     public VMCoder(String fileName)
     {
         labelCount = 0;
         functionName = "OS";
+        activeFile = "UNKNOWNFILE";
         file = new File(fileName);
         try { writer = new FileWriter(file); } catch (IOException e) { e.printStackTrace(); }
     }
@@ -121,7 +124,7 @@ public class VMCoder
                 break;
 
             case "static":
-                writeline( "@".concat( file.getName() ).concat(".").concat( String.valueOf(index) ) );
+                writeline( "@".concat( activeFile ).concat(".").concat( String.valueOf(index) ) );
                 break;
 
             case "constant":
@@ -431,6 +434,11 @@ public class VMCoder
         writeline("M=D");
         //SP = 256
         writeCall("Sys.init", 0);
+    }
+
+    public void setFileName(String name)
+    {
+        activeFile = name;
     }
 
 }
