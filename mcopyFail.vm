@@ -1,10 +1,6 @@
-
-function 2
-label LOOP
-push argument 1
-push constant 0
-eq
-if-goto LOOPEND
+ 
+                    
+goto 
 
 push argument 1
 push constant 1
@@ -14,16 +10,14 @@ pop argument 1
 push temp 0
 push argument 0
 add
-pop temp 0
-
-goto LOOP
+    pop temp 0
 
 label LOOPEND
 push temp 0
 return
 
 function Sys.init 0
-push constant 15
+        push constant 15
 push constant 3
 call multiply 2
 

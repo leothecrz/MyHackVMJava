@@ -60,7 +60,7 @@ public class VMParser
     private void resetFields()
     {
         command = VMCommands.UNSET;
-        ArgsOne = "";
+        ArgsOne = null;
         ArgsTwo = null;
     }
 
@@ -72,12 +72,18 @@ public class VMParser
 
         String[] lineArray = currentLine.split("\\s+", 0); // returns one string at minimum
         
-        VMCommands cmd = map.get( lineArray[0].trim() );
+        String test = lineArray[0].trim();
+        if(test.isEmpty())
+        {
+            command = VMCommands.EMPTY;
+            return;
+        }
+        VMCommands cmd = map.get( test );
         if(cmd == null)
             return;
         command = cmd;
 
-        if(command == VMCommands.C_ARITHMETIC)
+        if(command == VMCommands.C_ARITHMETIC || command == VMCommands.C_RETURN)
         {
             ArgsOne = lineArray[0].trim(); // args one hold ARITHMETIC Command
             return;
@@ -129,6 +135,11 @@ public class VMParser
     public int getLineNum()
     {
         return this.lineNum;
+    }
+
+    public String getCurrentLine() 
+    {
+        return currentLine;
     }
 
     public void close() throws IOException

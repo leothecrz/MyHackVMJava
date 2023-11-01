@@ -3,6 +3,7 @@ package cpp.hackvm;
 public enum VMCommands 
 {
     UNSET,
+    EMPTY,
     C_ARITHMETIC,
     C_PUSH,
     C_POP,

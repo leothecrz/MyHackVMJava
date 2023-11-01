@@ -88,8 +88,20 @@ public class VMCoder
         incrementSP();
     }
 
-    public void writePushPop(VMCommands cmd, String seg, int index ) throws IOException
+    public void writePushPop(VMCommands cmd, String seg, Integer index ) throws IOException
     {
+
+        if(seg == null)
+        {
+            System.err.println(cmd + " requires a segment.");
+            throw new IOException();
+        }
+
+        if(index == null)
+        {
+            System.err.println(cmd + " requires a valid INTEGER index.");
+            throw new IOException();
+        }
 
         if(cmd == VMCommands.C_PUSH)
             writeline( "// PUSH ".concat(seg).concat(" ").concat( String.valueOf(index) ) );
@@ -129,7 +141,10 @@ public class VMCoder
                 loadSeg("THAT", index);
                 break;
             default:
-                throw new RuntimeException("Unknown Segment");
+            {
+                System.err.println("Unknown Segment");
+                throw new IOException();
+            }
         }
         //Asume A REG has ADRS for PUSH or POP
         if(cmd == VMCommands.C_PUSH)
@@ -223,6 +238,12 @@ public class VMCoder
 
     public void writeGoto(String label) throws IOException
     {
+        if(label == null)
+        {
+            System.err.println("GOTO requires a label.");
+            throw new IOException();
+        }
+
         writeline("// Goto ".concat(label) );
         writeline( "@".concat(functionName).concat("$").concat(label) );
         writeline("0;JMP");
@@ -232,11 +253,35 @@ public class VMCoder
 
     public void writeLabel(String label) throws IOException
     {
+        if(label == null || label.isEmpty())
+        {
+            System.err.println("Label requires name.");
+            throw new IOException();
+        }
+
         writeline( "(".concat(functionName).concat("$").concat(label).concat(")") );
     }
 
-    public void writeFunction(String name, int counts) throws IOException
+    public void writeFunction(String name, Integer counts) throws IOException
     {
+        if(name.isEmpty() || name == null)
+        {
+            System.err.println("No function name.");
+            throw new IOException();
+        }
+
+        if(counts == null)
+        {
+            System.err.println("function is missing arg count");
+            throw new IOException();
+        }
+
+        if(counts < 0)
+        {
+            System.err.println("invalid function argument count");
+            throw new IOException();
+        }
+
         writeline("// Function ".concat(name).concat( " Args#: ").concat( String.valueOf(counts) ) );
         functionName = name;
         writeline("(".concat(functionName).concat(")"));
@@ -246,6 +291,12 @@ public class VMCoder
 
     public void writeIf(String label) throws IOException
     {
+        if(label == null)
+        {
+            System.err.println("IF-GOTO requires a label.");
+            throw new IOException();
+        }
+
         writeline("// If-Goto: ".concat(label) );
         popToD();
         writeline( "@".concat(functionName).concat("$").concat(label) );
@@ -266,8 +317,21 @@ public class VMCoder
         //Push Segment ADRS to stack
     }
 
-    public void writeCall(String name, int argsCount) throws IOException
+    public void writeCall(String name, Integer argsCount) throws IOException
     {
+
+        if(name == null)
+        {
+            System.err.println("CALL requires a function name.");
+            throw new IOException();
+        }
+
+        if(argsCount == null || argsCount < 0)
+        {
+            System.err.println("CALL requires a positive arg count.");
+            throw new IOException();
+        }
+
         writeline("// Call FUNCTION:".concat(name).concat(" Args#:").concat( String.valueOf(argsCount) ) );
 
         String lbl = functionName.concat("$RETURN_").concat( String.valueOf(labelCount) );

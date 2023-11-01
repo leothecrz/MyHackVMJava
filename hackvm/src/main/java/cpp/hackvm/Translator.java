@@ -54,75 +54,89 @@ public class Translator {
             File[] files = input.listFiles();
             for(File f : files)
                 if(f.getName().contains(".vm"))
-                    try { translate( f, verbose ); } catch (IOException e) { e.printStackTrace(); }
+                    translate( f, verbose );
         }
         else // On single file confirm file ends with vm. 
             if(input.getName().contains(".vm"))
-                try { translate( input, verbose );} catch (IOException e) { e.printStackTrace(); }
+                translate( input, verbose );
         
         // Close Coder Module and Scanner
         try { coderModule.closeFile(); } catch (IOException e) { e.printStackTrace(); }
         in.close();
     }
 
-    private static void translate(File file, boolean printLine) throws IOException
+    private static void translate(File file, boolean printLine)
     {
         VMParser fileParser = new VMParser( file.getPath() );
         System.out.println("Opened File: " + file.getName() );
 
         while(!fileParser.isAtEndOfFile())
         {
+            
             if(printLine)
-            System.out.println( 
-                "LN: " + 
-                fileParser.getLineNum() + " CMD:" + 
-                fileParser.getCommandType() + " ARG1:" +
-                fileParser.getArgs1() + " ARG2:" +
-                fileParser.getArgs2() == null ? "" : fileParser.getArgs2() 
-            );
-
-            switch ( fileParser.getCommandType() ) 
+                System.out.println( 
+                    "LN: " + 
+                    fileParser.getLineNum() + " CMD:" + 
+                    fileParser.getCommandType() + " ARG1:" +
+                    fileParser.getArgs1() + " ARG2:" +
+                    fileParser.getArgs2() == null ? "" : fileParser.getArgs2() 
+                );
+            try
             {
-                //Part 7 (Stack Arithmetic and Memory Access)
-                case C_ARITHMETIC :
-                    coderModule.writeArithmetic( fileParser.getArgs1() );
-                    break;
-                case C_PUSH:
-                    coderModule.writePushPop( VMCommands.C_PUSH, fileParser.getArgs1(), fileParser.getArgs2());
-                    break;
-                case C_POP:
-                    coderModule.writePushPop(  VMCommands.C_POP, fileParser.getArgs1(), fileParser.getArgs2());
-                    break;
+                switch ( fileParser.getCommandType() ) 
+                {
+                    //Part 7 (Stack Arithmetic and Memory Access)
+                    case C_ARITHMETIC :
+                        coderModule.writeArithmetic( fileParser.getArgs1() );
+                        break;
+                    case C_PUSH:
+                        coderModule.writePushPop( VMCommands.C_PUSH, fileParser.getArgs1(), fileParser.getArgs2());
+                        break;
+                    case C_POP:
+                        coderModule.writePushPop(  VMCommands.C_POP, fileParser.getArgs1(), fileParser.getArgs2());
+                        break;
 
-                //Part 8 (Program Flow and Function-functions )
-                case C_GOTO:
-                    coderModule.writeGoto( fileParser.getArgs1() );
-                    break;
-                case C_LABEL:
-                    coderModule.writeLabel( fileParser.getArgs1() );
-                    break;
-                case C_IF:
-                    coderModule.writeIf( fileParser.getArgs1() );
-                    break;
-                case C_FUNCTION:
-                    coderModule.writeFunction( fileParser.getArgs1(), fileParser.getArgs2() );
-                    break;
-                case C_CALL:
-                    coderModule.writeCall( fileParser.getArgs1(), fileParser.getArgs2() );
-                    break;
-                case C_RETURN:
-                    coderModule.writeReturn();
-                    break;
-                case UNSET:
-                    break;
+                    //Part 8 (Program Flow and Function-functions )
+                    case C_GOTO:
+                        coderModule.writeGoto( fileParser.getArgs1() );
+                        break;
+                    case C_LABEL:
+                        coderModule.writeLabel( fileParser.getArgs1() );
+                        break;
+                    case C_IF:
+                        coderModule.writeIf( fileParser.getArgs1() );
+                        break;
+                    case C_FUNCTION:
+                        coderModule.writeFunction( fileParser.getArgs1(), fileParser.getArgs2() );
+                        break;
+                    case C_CALL:
+                        coderModule.writeCall( fileParser.getArgs1(), fileParser.getArgs2() );
+                        break;
+                    case C_RETURN:
+                        coderModule.writeReturn();
+                        break;
+                    case EMPTY:
+                        break;
+                    case UNSET:
+                        System.err.println("Error in: ");
+                        System.err.println(fileParser.getCurrentLine());
+                        throw new IOException();
 
-                //Error STATE
-                default:
-                    System.err.println("UNKNOW COMMAND WARNING");
-                    break;
+                    //Error STATE
+                    default:
+                        System.err.println("UNKNOW COMMAND WARNING");
+                        break;
+                }
+            }
+            catch(IOException e)
+            {
+                System.err.println("Error on line number: " + fileParser.getLineNum() + "." );
+                break;
             }
         }
-        fileParser.close();
+        try {fileParser.close();} catch (IOException e) { 
+            System.err.println( "Failed to close file. File: " + file.getName() );
+            e.printStackTrace();
+        }
     }
-
 }
