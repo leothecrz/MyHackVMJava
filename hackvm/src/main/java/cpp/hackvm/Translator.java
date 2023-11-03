@@ -62,7 +62,8 @@ public class Translator {
         
         // Close Coder Module and Scanner
         try { coderModule.closeFile(); } catch (IOException e) { e.printStackTrace(); }
-        in.close();
+        if(in != null)  
+            in.close();
     }
 
     private static void translate(File file, boolean printLine)
